@@ -35,4 +35,10 @@ jobs:
     runs-on: lab-dev
     steps:
       - name: deploy container
-        run: docker run -d -p 8080:80 beezzbank/action-lab:${{ github.event.inputs.version }}
+        run: |
+          if[-z "$(docker ps | grep action-app)"];then
+            echo "container is exit"
+          else
+            docker stop action-app ; docker rm action-app
+          fi
+          docker run -d --name action-app -p 8080:80 beezzbank/action-lab:${{ github.event.inputs.version }}
