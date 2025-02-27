@@ -1,0 +1,44 @@
+# This is a basic workflow to help you get started with Actions
+
+name: "agent-retry"
+
+# Controls when the workflow will run
+inputs:
+  HOST_IP:
+    type: string
+    description: "HOST_IP"
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Set IP addresses
+      shell: bash
+      id: set-ips
+      run: |
+        echo "IPs=${{ inputs.HOST_IP }}" >> $GITHUB_ENV
+    - name: Check connection
+      shell: bash
+      run: |
+        for ip in ${{ env.IPs }}; do
+          echo "Checking $ip..."
+          if nc -vz $ip 22; then
+            echo "Successfully connected to $ip"
+            echo "result=$ip" >> $GITHUB_ENV
+            SUCCESS=true
+            break
+          else
+            echo "Connection failed for $ip"
+          fi
+        done
+        if [ "$SUCCESS" = false ]; then
+          echo "No IPs were reachable. Exiting."
+          exit 1
+        fi
+          env
+        
+    - name: Use selected IP
+      shell: bash
+      if: success()
+      run: |
+        echo "Using the selected IP: $result"
